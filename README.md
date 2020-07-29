@@ -1,10 +1,11 @@
-# keytar - Node module to manage system keychain
+# keytar-pass - Node module to manage system keychain
 
-[![Travis Build Status](https://travis-ci.org/atom/node-keytar.svg?branch=master)](https://travis-ci.org/atom/node-keytar)
-[![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/atom/node-keytar?svg=true)](https://ci.appveyor.com/project/Atom/node-keytar)
-[![Dependency Status](https://david-dm.org/atom/node-keytar.svg)](https://david-dm.org/atom/node-keytar)
+This library is based on the open source [keytar](https://github.com/atom/node-keytar) library.  keytar uses *libsecret* though, which depends on X11 (GUI).  In order to run on a headless server, this library uses the [pass](https://www.passwordstore.org/) library.  
 
-A native Node module to get, add, replace, and delete passwords in system's keychain. On macOS the passwords are managed by the Keychain, on Linux they are managed by the Secret Service API/libsecret, and on Windows they are managed by Credential Vault.
+
+A native Node module to get, add, replace, and delete passwords in system's keychain. On macOS the passwords are managed by the Keychain, on Windows they are managed by Credential Vault, and on Linux they're managed by the [pass](https://www.passwordstore.org/) library.  
+
+This 
 
 ## Installing
 
@@ -14,13 +15,60 @@ npm install keytar
 
 ### On Linux
 
-Currently this library uses `libsecret` so you may need to install it before running `npm install`.
+Currently this library uses `pass` so you may need to install it before running `npm install`.
 
 Depending on your distribution, you will need to run the following command:
 
-* Debian/Ubuntu: `sudo apt-get install libsecret-1-dev`
-* Red Hat-based: `sudo yum install libsecret-devel`
-* Arch Linux: `sudo pacman -S libsecret`
+* Debian/Ubuntu: `sudo apt install pass`
+* Red Hat-based: `sudo yum install pass`
+* Arch Linux: `sudo pacman -S pass`
+* openSUSE: `sudo zypper in password-store`
+* Gentoo: `emerge -av pass`
+
+You'll also need to initialize pass from within your nodejs project.  A very simple init script is as follows:
+
+```js
+import { exec } from 'child_process';
+
+if (process.platform != 'win32' && process.platform != 'darwin') {
+    log.info(`Detected current OS: ${process.platform}.  Initializing pass library for password storage.`);
+    exec('pass', (err, stdout, stderr) => {
+        if (stdout.startsWith('Password Store')) {
+            log.info('Pass library already initialized.');
+        } else if (stdout.includes('Error: password store is empty. Try "pass init".')) { 
+            // initialize pass
+            exec(`cat >keygenInfo <<EOF
+                    %echo Generating a basic OpenPGP key
+                    %no-protection
+                    Key-Type: DSA
+                    Key-Length: 1024
+                    Subkey-Type: ELG-E
+                    Subkey-Length: 1024
+                    Name-Real: MEMR Worklist
+                    Name-Comment: Persistant password storage for MEMR Worklist
+                    Name-Email: worklist@eisolution.com
+                    Expire-Date: 0
+                    # Do a commit here, so that we can later print "done" :-)
+                    %commit
+                    %echo done
+                EOF`);
+            exec('gpg --batch --generate-key keygenInfo');
+            exec('pass init worklist@eisolution.com', (error, stdout, stderr) => {
+                if (error) {
+                    log.error(`Error initializing pass: ${error.message}`);
+                }
+                if (stderr) {
+                    log.error(`Error output (stderr) while initializing pass: ${stderr}`);
+                }
+                log.info(`pass init: output: ${stdout}`);
+            });
+
+        } else if (stdout.includes('No such file or directory')) {
+            log.error('Using a linux system, but the pass library does not appear to be installed.  Try running "sudo apt install pass".');
+        }
+    });
+}
+```
 
 ## Building
 
@@ -28,17 +76,17 @@ Depending on your distribution, you will need to run the following command:
   * Run `npm install`
   * Run `npm test` to run the tests
 
-## Supported versions
-
-Each release of `keytar` includes prebuilt binaries for the versions of Node and Electron that are actively supported by these projects. Please refer to the release documentation for [Node](https://github.com/nodejs/Release) and [Electron](https://electronjs.org/docs/tutorial/support) to see what is supported currently.
 
 ## Docs
 
 ```javascript
-const keytar = require('keytar')
+const keytar = require('keytar-pass')
+
+// OR
+import keytar from 'keytar-pass';
 ```
 
-Every function in keytar is asynchronous and returns a promise. The promise will be rejected with any error that occurs or will be resolved with the function's "yields" value.
+Every function in keytar-pass is asynchronous and returns a promise. The promise will be rejected with any error that occurs or will be resolved with the function's "yields" value.
 
 ### getPassword(service, account)
 
