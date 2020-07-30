@@ -3,16 +3,16 @@
   "typings": "keytar.d.ts",
   "name": "keytar-pass",
   "description": "Bindings to native Mac/Linux/Windows password APIs",
-  "version": "6.0.2",
+  "version": "6.1.4",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/atom/node-keytar.git"
+    "url": "git+https://github.com/cullub/node-keytar.git"
   },
   "bugs": {
-    "url": "https://github.com/atom/node-keytar/issues"
+    "url": "https://github.com/cullub/node-keytar/issues"
   },
-  "homepage": "http://atom.github.io/node-keytar",
+  "homepage": "https://github.com/cullub/node-keytar",
   "keywords": [
     "keychain",
     "password",
@@ -29,8 +29,14 @@
     "keytar.d.ts"
   ],
   "types": "./keytar.d.ts",
+  "binary": {
+    "module_name": "keytar-pass",
+    "module_path": "./lib/binding/",
+    "host": "https://github.com/cullub/node-keytar/releases/download/",
+    "remote_path": "{version}"
+  },
   "scripts": {
-    "install": "prebuild-install || node-gyp rebuild",
+    "install": "node-pre-gyp install --fallback-to-build",
     "lint": "npm run cpplint",
     "cpplint": "node-cpplint --filters legal-copyright,build-include,build-namespaces src/*.cc",
     "test": "npm run lint && npm build . && mocha --require babel-core/register spec/",
@@ -53,7 +59,12 @@
   },
   "dependencies": {
     "node-addon-api": "^3.0.0",
-    "prebuild-install": "5.3.5"
+    "node-gyp-build": "^4.2.3",
+    "node-pre-gyp": "^0.15.0",
+    "node-pre-gyp-github": "^1.4.3",
+    "nopt": "^4.0.3",
+    "prebuild-install": "5.3.5",
+    "rimraf": "^3.0.2"
   },
   "directories": {
     "lib": "lib"

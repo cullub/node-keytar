@@ -10,7 +10,7 @@ This
 ## Installing
 
 ```sh
-npm install keytar
+npm install keytar-pass
 ```
 
 ### On Linux
@@ -44,16 +44,16 @@ if (process.platform != 'win32' && process.platform != 'darwin') {
                     Key-Length: 1024
                     Subkey-Type: ELG-E
                     Subkey-Length: 1024
-                    Name-Real: MEMR Worklist
-                    Name-Comment: Persistant password storage for MEMR Worklist
-                    Name-Email: worklist@eisolution.com
+                    Name-Real: YOUR NAME HERE
+                    Name-Comment: Coolness 123
+                    Name-Email: you@domain.com
                     Expire-Date: 0
                     # Do a commit here, so that we can later print "done" :-)
                     %commit
                     %echo done
                 EOF`);
             exec('gpg --batch --generate-key keygenInfo');
-            exec('pass init worklist@eisolution.com', (error, stdout, stderr) => {
+            exec('pass init you@domain.com', (error, stdout, stderr) => {
                 if (error) {
                     log.error(`Error initializing pass: ${error.message}`);
                 }

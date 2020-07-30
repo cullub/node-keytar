@@ -12,6 +12,22 @@
 
 namespace keytar {
 
+// https://stackoverflow.com/a/37454181/3437608
+std::vector<std::string> split(const std::string& str, const std::string& delim) {
+    std::vector<std::string> tokens;
+    size_t prev = 0, pos = 0;
+    do
+    {
+        pos = str.find(delim, prev);
+        if (pos == std::string::npos) pos = str.length();
+        std::string token = str.substr(prev, pos-prev);
+        if (!token.empty()) tokens.push_back(token);
+        prev = pos + delim.length();
+    }
+    while (pos < str.length() && prev < str.length());
+    return tokens;
+}
+
 static inline void rtrim(std::string &s) {
   s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
     return !std::isspace(ch);
@@ -63,14 +79,15 @@ KEYTAR_OP_RESULT GetPassword(const std::string& service,
 
   std::string cmd = "pass show " + service + "/" + account;
   std::string raw_password = GetStdoutFromCommand(cmd);
-  rtrim(raw_password);
+  rtrim(raw_password);  // remove trailing whitespace or newlines
+
 
   if (raw_password.find("not in the password store") != std::string::npos) {
     *errStr = raw_password;
     return FAIL_NONFATAL;
   }
 
-  *password = raw_password;
+  *password = split(raw_password, "\n").back();  // return just the last line, to account for instances where gpg outputs a warning
 
   return SUCCESS;
 }
